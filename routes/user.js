@@ -10,9 +10,11 @@ router.get('/sign-up', (req, res, next) => {
 router.post('/sign-up', (req, res, next) => {
   const data = req.body;
   console.log(data);
+  let user;
   User.findOne({ username: data.username })
-    .then((user) => {
-      if (user) {
+    .then((userobject) => {
+      user = userobject;
+      if (userobject) {
         throw new Error('There is already a user with that email.');
       } else {
         return bcrypt.hash(data.password, 10);
@@ -43,21 +45,24 @@ router.get('/log-in', (req, res, next) => {
 
 router.post('/log-in', (req, res, next) => {
   const data = req.body;
+  let user;
   User.findOne({
     username: data.username
   })
-    .then((user) => {
+    .then((userobject) => {
+      user = userobject;
       //console.log('user: ', user);
       //console.log('user hash password: ', user.passwordHashAndSalt);
       //console.log('data.password: ', data.password);
-      if (user) {
-        return bcrypt.compare(data.password, user.passwordHashAndSalt);
+      if (userobject) {
+        return bcrypt.compare(data.password, userobject.passwordHashAndSalt);
       } else {
         throw new Error('Username does not exist');
       }
     })
     .then((result) => {
       if (result) {
+        req.session.user = user;
         res.render('profile');
       } else {
         throw new Error('Wrong password!');

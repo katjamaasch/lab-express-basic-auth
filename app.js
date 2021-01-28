@@ -4,6 +4,10 @@ const createError = require('http-errors');
 const logger = require('morgan');
 const sassMiddleware = require('node-sass-middleware');
 const serveFavicon = require('serve-favicon');
+const expressSession = require('express-session');
+const connectMongo = require('connect-mongo');
+const MongoStore = connectMongo(expressSession);
+const mongoose = require('mongoose');
 
 const indexRouter = require('./routes/index');
 const userRouter = require('./routes/user');
@@ -13,6 +17,21 @@ const app = express();
 // Setup view engine
 app.set('views', join(__dirname, 'views'));
 app.set('view engine', 'hbs');
+
+app.use(
+  expressSession({
+    secret: process.env.SESSION_SECRET,
+    resave: true,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 15 * 24 * 60 * 60 * 1000 //15 days (days, hours, minutes, seconds, millisec)
+    },
+    store: new MongoStore({
+      mongooseConnection: mongoose.connection,
+      ttl: 60 * 60
+    })
+  })
+);
 
 app.use(serveFavicon(join(__dirname, 'public/images', 'favicon.ico')));
 
