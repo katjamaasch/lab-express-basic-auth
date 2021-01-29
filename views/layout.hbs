@@ -9,10 +9,23 @@
     <nav class="navbar">
     <a href="/">Home</a>
     <br>
-    <a href="/user/sign-up">Sign up to our awesome page!</a>
+    {{#if user}}
+    <a href="/user/profile">{{user.username}}'s Profile</a>
+    <br>
+      <a href="/user/main">Space</a>
+        <br>
+    <a href="/user/private">Private Space</a>
+    <form action="/user/log-out" method="POST">
+<button>Log out</button>
+    </form>
+    {{else}}
+<a href="/user/sign-up">Sign up to our awesome page!</a>
     <br>
     <a href="/user/log-in">Log in to our awesome page!</a>
     <br>
+        <a href="/user/main">Space</a>
+        <br>
+    {{/if}}
     </nav>
     {{{body}}}
   </body>

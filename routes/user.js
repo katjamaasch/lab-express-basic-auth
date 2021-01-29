@@ -3,6 +3,28 @@ const bcrypt = require('bcryptjs');
 const router = Router();
 const User = require('./../models/user');
 
+router.get('/main', (req, res, next) => {
+  res.render('main');
+});
+
+router.get('/private', (req, res, next) => {
+  res.render('private');
+});
+
+router.post('/edit', (req, res, next) => {
+  const data = req.body;
+  console.log(req.body);
+  User.findByIdAndUpdate(req.session.userId, {
+    username: data.newName
+  })
+    .then((user) => {
+      res.redirect('/profile');
+    })
+    .catch((error) => {
+      next(error);
+    });
+});
+
 router.get('/sign-up', (req, res, next) => {
   res.render('sign-up');
 });
@@ -10,10 +32,8 @@ router.get('/sign-up', (req, res, next) => {
 router.post('/sign-up', (req, res, next) => {
   const data = req.body;
   console.log(data);
-  let user;
   User.findOne({ username: data.username })
     .then((userobject) => {
-      user = userobject;
       if (userobject) {
         throw new Error('There is already a user with that email.');
       } else {
@@ -26,7 +46,7 @@ router.post('/sign-up', (req, res, next) => {
         passwordHashAndSalt: passwordHashAndSalt
       });
     })
-    .then((user) => {
+    .then(() => {
       //req.session.userId = user._id;
       res.render('confirmation');
     })
@@ -38,17 +58,11 @@ router.post('/sign-up', (req, res, next) => {
 router.get('/profile', (req, res, next) => {
   //property userId only exists when user is authenticated
   //as its created in the log-in process
-  console.log('re.session object: ', req.session);
-  if (req.session.userId) {
-    console.log('req.session.userId is: ', req.session.userId);
-    User.findById(req.session.userId)
-      .then((user) => {
-        console.log('req.session.userId is: ', req.session.userId);
-        res.render('profile', { user });
-      })
-      .catch((error) => {
-        next(error);
-      });
+  const user = req.user;
+  //this is because of the deserialisation middleware!
+  //there the user is defined as req.user
+  if (user) {
+    res.render('profile', { user });
   } else {
     next(new Error('You are not logged in.'));
   }
@@ -93,8 +107,12 @@ router.post('/log-in', (req, res, next) => {
 });
 
 router.post('/log-out', (req, res, next) => {
-  const data = req.body;
-  console.log(data);
+  //req.session.userId = undefined;
+  // delete req.session.userId;
+  // --> destroying the cookie and
+  // deleting the session from the database:
+  req.session.destroy();
+
   res.redirect('/');
 });
 

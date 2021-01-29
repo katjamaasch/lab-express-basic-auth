@@ -9,9 +9,9 @@ const connectMongo = require('connect-mongo');
 const MongoStore = connectMongo(expressSession);
 const mongoose = require('mongoose');
 
-
 const indexRouter = require('./routes/index');
 const userRouter = require('./routes/user');
+const User = require('./models/user');
 
 const app = express();
 
@@ -33,6 +33,41 @@ app.use(
     })
   })
 );
+
+//Deserialisizing the user
+
+const userDeserialisationMiddleware = (req, res, next) => {
+  //...if there is a userId in the session...
+  //(this means that the user is authenticated,
+  //because the session is only then given the
+  //property 'userId' with the value of the actual
+  //user's id)
+  if (req.session.userId) {
+    //...it loads the user object,...
+    User.findById(req.session.userId)
+      .then((user) => {
+        //...it saves it to the request...
+        //which means: its adding a property 'user'
+        //to the req object:
+        //(so its directly accessible and not only via
+        //req.body.username or req.session.username)
+        req.user = user;
+        //every view has access to the user object
+        // if there is  user authenticated
+        res.locals.user = user;
+        //...and it passes the request onwards...
+        next();
+      })
+      .catch((error) => {
+        next(error);
+      });
+  } else {
+    //...otherwise it moves on
+    next();
+  }
+};
+//this middleware sees...
+app.use(userDeserialisationMiddleware);
 
 app.use(serveFavicon(join(__dirname, 'public/images', 'favicon.ico')));
 
