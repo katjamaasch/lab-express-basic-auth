@@ -8,7 +8,12 @@ router.get('/main', (req, res, next) => {
 });
 
 router.get('/private', (req, res, next) => {
-  res.render('private');
+  const user = req.user;
+  if (user) {
+    res.render('private');
+  } else {
+    next(new Error('You need to log in first.'));
+  }
 });
 
 router.post('/edit', (req, res, next) => {
