@@ -36,7 +36,22 @@ router.post('/sign-up', (req, res, next) => {
 });
 
 router.get('/profile', (req, res, next) => {
-  res.render('profile');
+  //property userId only exists when user is authenticated
+  //as its created in the log-in process
+  console.log('re.session object: ', req.session);
+  if (req.session.userId) {
+    console.log('req.session.userId is: ', req.session.userId);
+    User.findById(req.session.userId)
+      .then((user) => {
+        console.log('req.session.userId is: ', req.session.userId);
+        res.render('profile', { user });
+      })
+      .catch((error) => {
+        next(error);
+      });
+  } else {
+    next(new Error('You are not logged in.'));
+  }
 });
 
 router.get('/log-in', (req, res, next) => {
@@ -62,8 +77,12 @@ router.post('/log-in', (req, res, next) => {
     })
     .then((result) => {
       if (result) {
-        req.session.user = user;
-        res.render('profile');
+        //creating a new property, userId,
+        //in the req.session object and assigning it the
+        // users id
+        req.session.userId = user._id;
+        console.log('The user is authenticated.');
+        res.redirect('/user/profile');
       } else {
         throw new Error('Wrong password!');
       }
