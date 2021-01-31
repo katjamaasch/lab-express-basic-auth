@@ -3,17 +3,20 @@ const bcrypt = require('bcryptjs');
 const router = Router();
 const User = require('./../models/user');
 
+const routeGuard = (req, res, next) => {
+  if (req.user) {
+    next();
+  } else {
+    next(new Error('You need to log in first.'));
+  }
+};
+
 router.get('/main', (req, res, next) => {
   res.render('main');
 });
 
-router.get('/private', (req, res, next) => {
-  const user = req.user;
-  if (user) {
-    res.render('private');
-  } else {
-    next(new Error('You need to log in first.'));
-  }
+router.get('/private', routeGuard, (req, res, next) => {
+  res.render('private');
 });
 
 router.post('/edit', (req, res, next) => {
