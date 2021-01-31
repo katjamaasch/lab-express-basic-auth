@@ -2,14 +2,7 @@ const { Router } = require('express');
 const bcrypt = require('bcryptjs');
 const router = Router();
 const User = require('./../models/user');
-
-const routeGuard = (req, res, next) => {
-  if (req.user) {
-    next();
-  } else {
-    next(new Error('You need to log in first.'));
-  }
-};
+const routeGuard = require('./../middleware/routeGuard');
 
 router.get('/main', (req, res, next) => {
   res.render('main');
